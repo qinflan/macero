@@ -1,0 +1,10 @@
+{
+    "idf.portWin": "COM3",
+    "files.associations": {
+        "stdio.h": "c",
+        "gpio.h": "c",
+        "task.h": "c",
+        "freertos.h": "c"
+    },
+    "idf.flashType": "UART"
+}

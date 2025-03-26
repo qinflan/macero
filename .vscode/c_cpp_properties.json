@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/Users/quinn/esp/v5.4/esp-idf/components/esp_driver_gpio/include/**",
+                "C:/Users/quinn/esp/v5.4/esp-idf/components/**",
+                "C:/Users/quinn/esp/v5.4/esp-idf/components/freertos/FreeRTOS-Kernel-SMP/include/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.18362.0",
+            "compilerPath": "cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+}
