@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "C:/Users/quinn/esp/v5.4/esp-idf/components/esp_driver_gpio/include/**",
                 "C:/Users/quinn/esp/v5.4/esp-idf/components/**",
-                "C:/Users/quinn/esp/v5.4/esp-idf/components/freertos/FreeRTOS-Kernel-SMP/include/**"
+                "C:/Users/quinn/esp/v5.4/esp-idf/components/freertos/FreeRTOS-Kernel-SMP/include/**",
+                "C:/Users/quinn/esp/v5.4/esp-idf/components/bt/include/esp32/include/**"
             ],
             "defines": [
                 "_DEBUG",

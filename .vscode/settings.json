@@ -4,7 +4,13 @@
         "stdio.h": "c",
         "gpio.h": "c",
         "task.h": "c",
-        "freertos.h": "c"
+        "freertos.h": "c",
+        "esp_bt_main.h": "c",
+        "esp_bt.h": "c",
+        "esp_gap_ble_api.h": "c",
+        "stdlib.h": "c",
+        "ble.h": "c",
+        "esp_task.h": "c"
     },
     "idf.flashType": "UART"
 }

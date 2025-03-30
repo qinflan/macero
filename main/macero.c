@@ -8,12 +8,17 @@
 #include "font8x8_basic.h"
 #include "driver/gpio.h"
 
+// BLE
+#include "esp_bt.h"
+#include "esp_gap_ble_api.h"
+#include "esp_bt_main.h"
+
 // screen
 #define tag "SSD1306"
 
 // buttons
-#define BUTTON_PIN1 25
-#define BUTTON_PIN2 26
+#define BUTTON_PIN1 26
+#define BUTTON_PIN2 25
 #define BUTTON_PIN3 27
 #define LED_PIN 2 // led
 
@@ -47,21 +52,23 @@ void start_evil_portal() {
 void start_ble_spam_attack() {
     gpio_set_level(LED_PIN, 1); 
     ESP_LOGI(tag, "Starting spam attack...");
-	ESP_LOGI(tag, "LED current level: %d", gpio_get_level(LED_PIN));  
+	ble_advertise();
 }
 
+// ddos
 void start_ddos_attack() {
     gpio_set_level(LED_PIN, 1); 
     ESP_LOGI(tag, "Starting DDOS attack...");
 	ESP_LOGI(tag, "LED current level: %d", gpio_get_level(LED_PIN));  
 }
 
+// packet sniffer
 void start_packet_sniffer() {
     gpio_set_level(LED_PIN, 1); 
     ESP_LOGI(tag, "Starting packet sniffer...");
 	ESP_LOGI(tag, "LED current level: %d", gpio_get_level(LED_PIN));  
 }
-
+// TODO: cancel active mode if exit is pressed
 void exit_menu() {
     gpio_set_level(LED_PIN, 0); 
     ESP_LOGI(tag, "Exiting menu...");
@@ -181,6 +188,10 @@ void handle_menu_nav(SSD1306_t *dev, MenuNode** currentMenu, int* selected_index
 
 void app_main(void)
 {
+
+	// initialize ble
+	ble_init();
+
 	// configure buttons
 	gpio_set_direction(BUTTON_PIN1, GPIO_MODE_INPUT);
 	gpio_set_pull_mode(BUTTON_PIN1, GPIO_PULLUP_ONLY);
