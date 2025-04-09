@@ -10,7 +10,13 @@
         "esp_gap_ble_api.h": "c",
         "stdlib.h": "c",
         "ble.h": "c",
-        "esp_task.h": "c"
+        "esp_task.h": "c",
+        "esp_log.h": "c",
+        "atomic": "c",
+        "cstddef": "c",
+        "type_traits": "c",
+        "*.inc": "c",
+        "esp_bt_defs.h": "c"
     },
     "idf.flashType": "UART"
 }

@@ -1,4 +1,5 @@
 #include "ble.h"
+#include <string.h>
 
 static const char *tag = "BLE_MODULE";
 
@@ -12,7 +13,7 @@ static esp_ble_adv_params_t adv_params = {
     .adv_filter_policy  = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
 };
 
-void ble_gap_event_handler(esp_gap_ble_cb_event_t event, esp_gap_ble_cb_param_t *param) {
+void ble_gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
 	switch (event) {
 
 		case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
@@ -36,6 +37,12 @@ void ble_gap_event_handler(esp_gap_ble_cb_event_t event, esp_gap_ble_cb_param_t 
 }
 void ble_init(void) {
 	esp_err_t ret;
+	ret = nvs_flash_init();
+	if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
 
 	ESP_LOGI(tag, "Initializing Bluetooth Controller...");
 	esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
@@ -65,22 +72,37 @@ void ble_init(void) {
         return;
     }
 
+	ret = esp_ble_gap_set_device_name(BLE_SPAM_DEVICE_NAME);
+    if (ret != ESP_OK) {
+        ESP_LOGE(tag, "Failed to set device name: %s", esp_err_to_name(ret));
+    } else {
+        ESP_LOGI(tag, "Device name set to %s.", BLE_SPAM_DEVICE_NAME);
+    }
+
 	esp_ble_gap_register_callback(ble_gap_event_handler);
 }
-static void ble_advertise(void) {
-	esp_ble_gap_config_adv_data_t adv_data = {
+void ble_advertise(void) {
+	static const uint8_t audio_service_uuid[16] = {
+        0x0a, 0x11, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x8e, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    esp_bt_uuid_t service_uuid;
+    service_uuid.len = ESP_UUID_LEN_128;  
+    memcpy(service_uuid.uuid.uuid128, audio_service_uuid, sizeof(audio_service_uuid));
+
+	esp_ble_adv_data_t adv_data = { // ble advertisement data TODO: create enum file to pull random ad data objects
 		.set_scan_rsp = false,
 		.include_name = true,
-		.include_txpower = false,
+		.include_txpower = true,
 		.min_interval = BLE_ADV_INT_MIN,
 		.max_interval = BLE_ADV_INT_MAX,
 		.appearance = 0x00,
 		.manufacturer_len = 0,
-		.p_manufacturer_data = NULL,
+		// .p_manufacturer_data = NULL,
 		.service_data_len = 0,
-		.p_service_data = NULL,
-		.service_uuid_len = 0,
-		.p_service_uuid = NULL,
+		// .p_service_data = NULL,
+		.service_uuid_len = sizeof(audio_service_uuid),
+		.p_service_uuid = service_uuid.uuid.uuid128,
 		.flag = ESP_BLE_ADV_FLAG_GEN_DISC | ESP_BLE_ADV_FLAG_BREDR_NOT_SPT
 	};
 

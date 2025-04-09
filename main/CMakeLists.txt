@@ -4,6 +4,7 @@ idf_component_register(SRCS
                     INCLUDE_DIRS 
                         "." 
                         "../components/ssd1306"
-
                     REQUIRES
-                        driver)
+                        driver
+                        bt
+                        nvs_flash)

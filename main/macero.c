@@ -9,9 +9,7 @@
 #include "driver/gpio.h"
 
 // BLE
-#include "esp_bt.h"
-#include "esp_gap_ble_api.h"
-#include "esp_bt_main.h"
+#include "ble.h"
 
 // screen
 #define tag "SSD1306"
@@ -72,7 +70,12 @@ void start_packet_sniffer() {
 void exit_menu() {
     gpio_set_level(LED_PIN, 0); 
     ESP_LOGI(tag, "Exiting menu...");
-	ESP_LOGI(tag, "LED current level: %d", gpio_get_level(LED_PIN));  
+	esp_err_t ret = esp_ble_gap_stop_advertising();
+    if (ret == ESP_OK) {
+        ESP_LOGI(tag, "Advertising stopped successfully");
+    } else {
+        ESP_LOGE(tag, "Failed to stop advertising: %s", esp_err_to_name(ret));
+    }
 }
 
 MenuNode evilPortalSettings = {
