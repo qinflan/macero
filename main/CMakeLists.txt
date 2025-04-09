@@ -1,3 +1,10 @@
-idf_component_register(SRCS "macero.c"
-                    INCLUDE_DIRS "." "../components/ssd1306"
-                    REQUIRES driver)
+idf_component_register(SRCS 
+                        "macero.c"
+                        "ble.c"
+                    INCLUDE_DIRS 
+                        "." 
+                        "../components/ssd1306"
+                    REQUIRES
+                        driver
+                        bt
+                        nvs_flash)
