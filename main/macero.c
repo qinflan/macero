@@ -11,6 +11,9 @@
 // BLE
 #include "ble.h"
 
+// Captive Portal
+#include "captive_portal.h"
+
 // screen
 #define tag "SSD1306"
 
@@ -44,7 +47,8 @@ MenuNode bluetoothSettings;
 void start_evil_portal() {
     gpio_set_level(LED_PIN, 1);
     ESP_LOGI(tag, "Starting Evil AP mode...");
-	ESP_LOGI(tag, "LED current level: %d", gpio_get_level(LED_PIN));  
+	captive_portal_main();
+
 }
 
 void start_ble_spam_attack() {
@@ -57,15 +61,14 @@ void start_ble_spam_attack() {
 void start_ddos_attack() {
     gpio_set_level(LED_PIN, 1); 
     ESP_LOGI(tag, "Starting DDOS attack...");
-	ESP_LOGI(tag, "LED current level: %d", gpio_get_level(LED_PIN));  
 }
 
 // packet sniffer
 void start_packet_sniffer() {
     gpio_set_level(LED_PIN, 1); 
     ESP_LOGI(tag, "Starting packet sniffer...");
-	ESP_LOGI(tag, "LED current level: %d", gpio_get_level(LED_PIN));  
 }
+
 // TODO: cancel active mode if exit is pressed
 void exit_menu() {
     gpio_set_level(LED_PIN, 0); 
@@ -78,13 +81,20 @@ void exit_menu() {
     }
 }
 
+void exit_ap_mode() {
+    gpio_set_level(LED_PIN, 0); 
+    ESP_LOGI(tag, "Exiting menu...");
+	stop_captive_portal();
+ 
+}
+
 MenuNode evilPortalSettings = {
 	.options = {"start evil AP", "data", "options", "exit"},
 	.num_options = 4,
 	.children = NULL, 
 	.num_children = 0,
 	.parent = &wifiSettings,
-	.actions = { start_evil_portal, NULL, NULL, exit_menu } // add this later for exit, and start 
+	.actions = { start_evil_portal, NULL, NULL, exit_ap_mode } // add this later for exit, and start 
 };
 
 MenuNode ddosSettings = {
@@ -194,6 +204,8 @@ void app_main(void)
 
 	// initialize ble
 	ble_init();
+
+	// initialize
 
 	// configure buttons
 	gpio_set_direction(BUTTON_PIN1, GPIO_MODE_INPUT);

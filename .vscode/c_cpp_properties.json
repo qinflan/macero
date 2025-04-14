@@ -9,7 +9,11 @@
                 "C:/Users/quinn/esp/v5.4/esp-idf/components/freertos/FreeRTOS-Kernel-SMP/include/**",
                 "C:/Users/quinn/esp/v5.4/esp-idf/components/bt/include/esp32/include/**",
                 "C:/Users/quinn/esp/v5.4/esp-idf/components/bt/host/bluedroid/api/include/api",
-                "C:/Users/quinn/esp/v5.4/esp-idf/components/nvs_flash/include"
+                "C:/Users/quinn/esp/v5.4/esp-idf/components/nvs_flash/include",
+                "C:/Users/quinn/esp/v5.4/esp-idf/components/esp_event/include",
+                "C:/Users/quinn/esp/v5.4/esp-idf/components/esp_wifi/include",
+                "C:/Users/quinn/esp/v5.4/esp-idf/components/esp_netif/include",
+                "C:/Users/quinn/esp/v5.4/esp-idf/components/esp_http_server/include"
             ],
             "defines": [
                 "_DEBUG",
