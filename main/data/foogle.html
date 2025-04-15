@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang=""en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name=""viewport" content="width=device-width, initial-scale=1.0" />
+    <title>foogle login</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items:center;
+            gap: 1.4rem;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            gap: 1rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 2rem;
+        }
+
+        button {
+            background: #292929;
+            color: white;
+            border: none;
+            padding: 2rem;
+            font-size: 2rem;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 80%;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <h1>foogle.</h1>
+        <form method="POST" action="/login">
+            <input type="email" name="email" placeholder="email" required />
+            <input type="password" name="password" placeholder="password" required />
+            <button type="submit">login</button>
+        </form>
+    </div>
+</body>
+
+</html>
