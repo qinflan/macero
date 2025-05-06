@@ -23,7 +23,7 @@
 
 #define DEBOUNCE_TIME 200 / portTICK_PERIOD_MS
 
-// struct for use of menu nav
+// menu tree node - move to header
 typedef struct MenuNode {
 	char* options[10];
 	int num_options;
@@ -33,23 +33,21 @@ typedef struct MenuNode {
 	void (*actions[10])(SSD1306_t *dev);
 } MenuNode;
 
+ListNode* harvested_data_head = NULL;
+
+
 MenuNode mainMenu;
 MenuNode wifiSettings;
 MenuNode evilPortalSettings;
 MenuNode ddosSettings;
 MenuNode snifferSettings;
 MenuNode bluetoothSettings;
-
-MenuNode loginListNode;
-
 MenuNode* currentMenu;
 int selected_index;
-
 
 // function declarations: move to a header file
 void exit_menu(SSD1306_t *dev);
 void display_menu(SSD1306_t *dev, MenuNode* currentMenu, int selected_index);
-
 
 void start_evil_portal(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 1);
@@ -57,20 +55,46 @@ void start_evil_portal(SSD1306_t *dev) {
 	captive_portal_main();
 }
 
-void show_ap_harvest(SSD1306_t *dev) {
-	login_data_t data = get_captured_login();
-	if(data.valid) {
-		loginListNode.options[0] = "harvest:";
-		loginListNode.options[1] = data.email;
-		loginListNode.options[2] = data.password;
-		loginListNode.options[3] = "exit";
-		loginListNode.num_options = 4;
-		loginListNode.actions[3] = exit_menu;
-		loginListNode.parent = &evilPortalSettings;
+//  helper function to chunk node data into sized lines on screen
+int display_chunked_text(SSD1306_t *dev, const char* text, int start_line, int max_lines) {
+    int line = start_line;
+    int len = strlen(text);
+    
+    for (int i = 0; i < len && line < max_lines; i += 16) {
+        char chunk[17]; // 16 chars + null
+        strncpy(chunk, &text[i], 16);
+        chunk[16] = '\0'; // null-terminate manually
+        ssd1306_display_text(dev, line++, chunk, strlen(chunk), false);
+    }
 
-		currentMenu = &loginListNode;
-		display_menu(dev, &loginListNode, 0);
-	}
+    return line; // return the next available line index
+}
+
+void show_ap_harvest(SSD1306_t *dev) {
+	ssd1306_clear_screen(dev, false);
+    ssd1306_contrast(dev, 0xff);
+
+	ListNode* current = harvested_data_head;
+    int line = 0;
+
+	if (current == NULL) {
+        ssd1306_display_text(dev, line++, "No Data", 7, false);
+    } else {
+        while (current != NULL && line < 8) {
+            line = display_chunked_text(dev, current->data.email, line, 8);
+            if (line >= 8) break; // No more room for password
+
+            line = display_chunked_text(dev, current->data.password, line, 8);
+            if (line >= 8) break;
+
+            current = current->next;
+        }
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(5000));
+    currentMenu = currentMenu->parent;
+    display_menu(dev, currentMenu, 0);
+
 }
 
 void start_ble_spam_attack(SSD1306_t *dev) {
@@ -147,14 +171,14 @@ MenuNode wifiSettings = {
 	.actions = { NULL, NULL, NULL, exit_menu } 
 };
 
-MenuNode ap_harvest = {
-	.options = {"harvest:", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "exit"},
-	.num_options = 4,
-	.children = NULL, 
-	.num_children = 0,
-	.parent = &wifiSettings,
-	.actions = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, exit_menu } 
-};
+// MenuNode ap_harvest = {
+// 	.options = {"harvest:", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "exit"},
+// 	.num_options = 4,
+// 	.children = NULL, 
+// 	.num_children = 0,
+// 	.parent = &wifiSettings,
+// 	.actions = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, exit_menu } 
+// };
 
 MenuNode bluetoothSettings = {
 	.options = {"start BLE spam", "script select", "dump", "exit"},

