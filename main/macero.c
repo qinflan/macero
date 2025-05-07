@@ -241,7 +241,7 @@ void display_menu(SSD1306_t *dev, MenuNode* currentMenu, int selected_index) {
 // traverse menu tree
 void handle_menu_nav(SSD1306_t *dev, MenuNode** currentMenu, int* selected_index) {
     if (read_button(BUTTON_PIN1)) { // select button
-        // Save selected action and child first
+        // save selected action and child first
         void (*selected_action)(SSD1306_t *) = (*currentMenu)->actions[*selected_index];
         MenuNode* selected_child = NULL;
 
@@ -253,7 +253,7 @@ void handle_menu_nav(SSD1306_t *dev, MenuNode** currentMenu, int* selected_index
             selected_action(dev);
         }
 
-        // Handle menu exit logic AFTER running the action
+        // handle menu exit logic after running the action
         if (selected_action == exit_ble_mode || 
             selected_action == exit_ap_mode || 
             selected_action == exit_menu) 
@@ -287,8 +287,8 @@ void handle_menu_nav(SSD1306_t *dev, MenuNode** currentMenu, int* selected_index
 
 void app_main(void)
 {
-
-	init_menus(); //test
+	// initialize menu tree
+	init_menus();
 
 	// initialize ble
 	ble_init();
@@ -328,11 +328,13 @@ void app_main(void)
 
 	vTaskDelay(3000 / portTICK_PERIOD_MS);
 
+	// defaults
 	currentMenu = &mainMenu;
 	selected_index = 0;
 
 	display_menu(&dev, currentMenu, selected_index);
 
+	// menu loop
 	while(1) {
 		handle_menu_nav(&dev, &currentMenu, &selected_index);
 		vTaskDelay(1);
