@@ -41,6 +41,7 @@ MenuNode wifiSettings;
 MenuNode evilPortalSettings;
 MenuNode bluetoothSettings;
 MenuNode* currentMenu;
+
 int selected_index;
 
 // function declarations: move to a header file
@@ -180,45 +181,49 @@ void exit_menu(SSD1306_t *dev) {
     ESP_LOGI(tag, "Exiting menu...");
 }
 
-MenuNode evilPortalSettings = {
-	.options = {"start evil AP", "data", "options", "exit"},
-	.num_options = 4,
-	.children = NULL, 
-	.num_children = 0,
-	.parent = &wifiSettings,
-	.actions = { start_evil_portal, show_ap_harvest, NULL, exit_ap_mode } 
-};
+void init_menus() {
 
-MenuNode* wifiChildren[] = { &evilPortalSettings };
+    // define nodes first
+    mainMenu = (MenuNode){
+        .options = {"WiFi", "BLE"},
+        .num_options = 2,
+        .parent = NULL,
+        .actions = {NULL, NULL}
+    };
 
-MenuNode wifiSettings = {
-	.options = {"evil portal", "exit"},
-	.num_options = 2,
-	.children = wifiChildren,
-	.num_children = 1,
-	.parent = &mainMenu,
-	.actions = { NULL, exit_menu } 
-};
+    wifiSettings = (MenuNode){
+        .options = {"evil portal", "exit"},
+        .num_options = 2,
+        .parent = &mainMenu,
+        .actions = {NULL, exit_menu}
+    };
 
-MenuNode bluetoothSettings = {
-	.options = {"start BLE spam", "script select", "dump", "exit"},
-	.num_options = 4,
-	.children = NULL, 
-	.num_children = 0,
-	.parent = &mainMenu,
-	.actions = { start_ble_spam_attack, NULL, NULL, exit_ble_mode } 
-};
+    evilPortalSettings = (MenuNode){
+        .options = {"start evil AP", "data", "options", "exit"},
+        .num_options = 4,
+        .parent = &wifiSettings,
+        .actions = {start_evil_portal, show_ap_harvest, NULL, exit_ap_mode}
+    };
 
-MenuNode* mainMenuChildren[] = { &wifiSettings, &bluetoothSettings };
+    bluetoothSettings = (MenuNode){
+        .options = {"start BLE spam", "script select", "dump", "exit"},
+        .num_options = 4,
+        .parent = &mainMenu,
+        .actions = {start_ble_spam_attack, NULL, NULL, exit_ble_mode}
+    };
 
-MenuNode mainMenu = {
-	.options = {"WiFi", "BLE"},
-	.num_options = 2,
-	.children = mainMenuChildren, 
-	.num_children = 2,
-	.parent = NULL,
-	.actions = { NULL, NULL } 
-};
+    // now that nodes exist, assign children
+    static MenuNode* mainMenuChildrenLocal[] = { &wifiSettings, &bluetoothSettings };
+    static MenuNode* wifiChildrenLocal[] = { &evilPortalSettings };
+
+    mainMenu.children = mainMenuChildrenLocal;
+    mainMenu.num_children = 2;
+
+    wifiSettings.children = wifiChildrenLocal;
+    wifiSettings.num_children = 1;
+
+    currentMenu = &mainMenu;
+}
 
 void display_menu(SSD1306_t *dev, MenuNode* currentMenu, int selected_index) {
 
@@ -239,25 +244,34 @@ void display_menu(SSD1306_t *dev, MenuNode* currentMenu, int selected_index) {
 
 // traverse menu tree
 void handle_menu_nav(SSD1306_t *dev, MenuNode** currentMenu, int* selected_index) {
-	if (read_button(BUTTON_PIN1)) { // select button
-		if ((*currentMenu)->children != NULL) {
-			(*currentMenu) = (*currentMenu)->children[*selected_index];
-		} else if ((*currentMenu)->actions[*selected_index] != NULL) {
-			(*currentMenu)->actions[*selected_index](dev); // run function at index
+    if (read_button(BUTTON_PIN1)) { // select button
+        // save selected action and child first
+        void (*selected_action)(SSD1306_t *) = (*currentMenu)->actions[*selected_index];
+        MenuNode* selected_child = NULL;
 
-			// if function is an exit option then move to parent menu
-			if ((*currentMenu)->actions[*selected_index] == exit_ble_mode || 
-				(*currentMenu)->actions[*selected_index] == exit_ap_mode || 
-				(*currentMenu)->actions[*selected_index] == exit_menu
-			) 
-			{
-				(*currentMenu) = (*currentMenu)->parent;
-				*selected_index = 0;
-			}
-		} 
-		display_menu(dev, *currentMenu, *selected_index);
+        if ((*currentMenu)->children != NULL && *selected_index < (*currentMenu)->num_children) {
+            selected_child = (*currentMenu)->children[*selected_index];
+        }
+
+        if (selected_action != NULL) {
+            selected_action(dev);
+        }
+
+        // handle menu exit logic after running the action
+        if (selected_action == exit_ble_mode || 
+            selected_action == exit_ap_mode || 
+            selected_action == exit_menu) 
+        {
+            *currentMenu = (*currentMenu)->parent;
+            *selected_index = 0;
+        } else if (selected_child != NULL) {
+            *currentMenu = selected_child;
+            *selected_index = 0;
+        }
+
+        display_menu(dev, *currentMenu, *selected_index);
 		vTaskDelay(DEBOUNCE_TIME);
-	}
+    }
 
 	if (read_button(BUTTON_PIN2)) { // up button
 		(*selected_index)--;
@@ -277,6 +291,8 @@ void handle_menu_nav(SSD1306_t *dev, MenuNode** currentMenu, int* selected_index
 
 void app_main(void)
 {
+	// initialize menu tree
+	init_menus();
 
 	// initialize ble
 	ble_init();
@@ -316,11 +332,13 @@ void app_main(void)
 
 	vTaskDelay(3000 / portTICK_PERIOD_MS);
 
+	// defaults
 	currentMenu = &mainMenu;
 	selected_index = 0;
 
 	display_menu(&dev, currentMenu, selected_index);
 
+	// menu loop
 	while(1) {
 		handle_menu_nav(&dev, &currentMenu, &selected_index);
 		vTaskDelay(1);
