@@ -12,7 +12,9 @@
 #include "esp_gattc_api.h"
 #include "esp_gatts_api.h"
 #include "esp_gatt_common_api.h"
-#include "esp_hidd_api.h"
+// #include "esp_hidd_gatts.h"
+// #include "esp_hidd.h"
+
 
 
 #define BLE_ADV_INT_MIN 0x20

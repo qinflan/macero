@@ -3,7 +3,6 @@
 
 static const char *tag = "BLE_MODULE";
 
-// BLE Spam
 static esp_ble_adv_params_t adv_params = {
     .adv_int_min        = BLE_ADV_INT_MIN,
     .adv_int_max        = BLE_ADV_INT_MAX,
@@ -11,6 +10,13 @@ static esp_ble_adv_params_t adv_params = {
     .own_addr_type      = BLE_ADDR_TYPE_PUBLIC,
     .channel_map        = ADV_CHNL_ALL,
     .adv_filter_policy  = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
+};
+
+static uint8_t hid_report_map[] = {
+    0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x05, 0x07, 
+    0x19, 0x00, 0x29, 0xFF, 0x15, 0x00, 0x25, 0x01, 
+    0x95, 0x06, 0x75, 0x01, 0x81, 0x02, 0x95, 0x01, 
+    0x75, 0x08, 0x81, 0x01, 0xC0
 };
 
 void ble_gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
@@ -35,8 +41,10 @@ void ble_gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t 
 			break;
 	}
 }
+
 void ble_init(void) {
 	esp_err_t ret;
+
 	ret = nvs_flash_init();
 	if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
@@ -96,7 +104,7 @@ void ble_advertise(void) {
 		.include_txpower = true,
 		.min_interval = BLE_ADV_INT_MIN,
 		.max_interval = BLE_ADV_INT_MAX,
-		.appearance = 0x03C0,
+		.appearance = 0x02C0,
 		.p_manufacturer_data = NULL,
 		.service_data_len = 0,
 		.p_service_data = NULL,
