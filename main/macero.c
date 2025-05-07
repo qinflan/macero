@@ -41,6 +41,7 @@ MenuNode wifiSettings;
 MenuNode evilPortalSettings;
 MenuNode bluetoothSettings;
 MenuNode* currentMenu;
+
 int selected_index;
 
 // function declarations: move to a header file
@@ -239,25 +240,34 @@ void display_menu(SSD1306_t *dev, MenuNode* currentMenu, int selected_index) {
 
 // traverse menu tree
 void handle_menu_nav(SSD1306_t *dev, MenuNode** currentMenu, int* selected_index) {
-	if (read_button(BUTTON_PIN1)) { // select button
-		if ((*currentMenu)->children != NULL) {
-			(*currentMenu) = (*currentMenu)->children[*selected_index];
-		} else if ((*currentMenu)->actions[*selected_index] != NULL) {
-			(*currentMenu)->actions[*selected_index](dev); // run function at index
+    if (read_button(BUTTON_PIN1)) { // select button
+        // Save selected action and child first
+        void (*selected_action)(SSD1306_t *) = (*currentMenu)->actions[*selected_index];
+        MenuNode* selected_child = NULL;
 
-			// if function is an exit option then move to parent menu
-			if ((*currentMenu)->actions[*selected_index] == exit_ble_mode || 
-				(*currentMenu)->actions[*selected_index] == exit_ap_mode || 
-				(*currentMenu)->actions[*selected_index] == exit_menu
-			) 
-			{
-				(*currentMenu) = (*currentMenu)->parent;
-				*selected_index = 0;
-			}
-		} 
-		display_menu(dev, *currentMenu, *selected_index);
+        if ((*currentMenu)->children != NULL && *selected_index < (*currentMenu)->num_children) {
+            selected_child = (*currentMenu)->children[*selected_index];
+        }
+
+        if (selected_action != NULL) {
+            selected_action(dev);
+        }
+
+        // Handle menu exit logic AFTER running the action
+        if (selected_action == exit_ble_mode || 
+            selected_action == exit_ap_mode || 
+            selected_action == exit_menu) 
+        {
+            *currentMenu = (*currentMenu)->parent;
+            *selected_index = 0;
+        } else if (selected_child != NULL) {
+            *currentMenu = selected_child;
+            *selected_index = 0;
+        }
+
+        display_menu(dev, *currentMenu, *selected_index);
 		vTaskDelay(DEBOUNCE_TIME);
-	}
+    }
 
 	if (read_button(BUTTON_PIN2)) { // up button
 		(*selected_index)--;
@@ -277,6 +287,8 @@ void handle_menu_nav(SSD1306_t *dev, MenuNode** currentMenu, int* selected_index
 
 void app_main(void)
 {
+
+	init_menus(); //test
 
 	// initialize ble
 	ble_init();
