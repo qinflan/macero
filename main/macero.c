@@ -181,45 +181,49 @@ void exit_menu(SSD1306_t *dev) {
     ESP_LOGI(tag, "Exiting menu...");
 }
 
-MenuNode evilPortalSettings = {
-	.options = {"start evil AP", "data", "options", "exit"},
-	.num_options = 4,
-	.children = NULL, 
-	.num_children = 0,
-	.parent = &wifiSettings,
-	.actions = { start_evil_portal, show_ap_harvest, NULL, exit_ap_mode } 
-};
+void init_menus() {
 
-MenuNode* wifiChildren[] = { &evilPortalSettings };
+    // define nodes first
+    mainMenu = (MenuNode){
+        .options = {"WiFi", "BLE"},
+        .num_options = 2,
+        .parent = NULL,
+        .actions = {NULL, NULL}
+    };
 
-MenuNode wifiSettings = {
-	.options = {"evil portal", "exit"},
-	.num_options = 2,
-	.children = wifiChildren,
-	.num_children = 1,
-	.parent = &mainMenu,
-	.actions = { NULL, exit_menu } 
-};
+    wifiSettings = (MenuNode){
+        .options = {"evil portal", "exit"},
+        .num_options = 2,
+        .parent = &mainMenu,
+        .actions = {NULL, exit_menu}
+    };
 
-MenuNode bluetoothSettings = {
-	.options = {"start BLE spam", "script select", "dump", "exit"},
-	.num_options = 4,
-	.children = NULL, 
-	.num_children = 0,
-	.parent = &mainMenu,
-	.actions = { start_ble_spam_attack, NULL, NULL, exit_ble_mode } 
-};
+    evilPortalSettings = (MenuNode){
+        .options = {"start evil AP", "data", "options", "exit"},
+        .num_options = 4,
+        .parent = &wifiSettings,
+        .actions = {start_evil_portal, show_ap_harvest, NULL, exit_ap_mode}
+    };
 
-MenuNode* mainMenuChildren[] = { &wifiSettings, &bluetoothSettings };
+    bluetoothSettings = (MenuNode){
+        .options = {"start BLE spam", "script select", "dump", "exit"},
+        .num_options = 4,
+        .parent = &mainMenu,
+        .actions = {start_ble_spam_attack, NULL, NULL, exit_ble_mode}
+    };
 
-MenuNode mainMenu = {
-	.options = {"WiFi", "BLE"},
-	.num_options = 2,
-	.children = mainMenuChildren, 
-	.num_children = 2,
-	.parent = NULL,
-	.actions = { NULL, NULL } 
-};
+    // now that nodes exist, assign children
+    static MenuNode* mainMenuChildrenLocal[] = { &wifiSettings, &bluetoothSettings };
+    static MenuNode* wifiChildrenLocal[] = { &evilPortalSettings };
+
+    mainMenu.children = mainMenuChildrenLocal;
+    mainMenu.num_children = 2;
+
+    wifiSettings.children = wifiChildrenLocal;
+    wifiSettings.num_children = 1;
+
+    currentMenu = &mainMenu;
+}
 
 void display_menu(SSD1306_t *dev, MenuNode* currentMenu, int selected_index) {
 
