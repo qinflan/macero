@@ -1,10 +1,20 @@
 idf_component_register(SRCS 
                         "macero.c"
                         "ble.c"
+                        "captive_portal.c"
+                        "dns_server.c"
                     INCLUDE_DIRS 
                         "." 
                         "../components/ssd1306"
+                    EMBED_FILES 
+                        "./data/foogle.html"
                     REQUIRES
                         driver
                         bt
-                        nvs_flash)
+                        nvs_flash
+                        esp_wifi
+                        esp_event
+                        esp_netif
+                        esp_http_server
+                        lwip
+                        )

@@ -16,7 +16,14 @@
         "cstddef": "c",
         "type_traits": "c",
         "*.inc": "c",
-        "esp_bt_defs.h": "c"
+        "esp_bt_defs.h": "c",
+        "esp_netif.h": "c",
+        "captive_portal.h": "c",
+        "esp_http_server.h": "c",
+        "esp_wifi.h": "c",
+        "sockets.h": "c",
+        "dns_server.h": "c",
+        "future": "c"
     },
     "idf.flashType": "UART"
 }
