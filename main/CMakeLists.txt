@@ -6,6 +6,7 @@ idf_component_register(SRCS
                     INCLUDE_DIRS 
                         "." 
                         "../components/ssd1306"
+                        "../components/esp_hidd"
                     EMBED_FILES 
                         "./data/foogle.html"
                     REQUIRES
