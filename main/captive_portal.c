@@ -12,6 +12,8 @@ static esp_err_t http_get_handler(httpd_req_t *req);
 static httpd_handle_t start_webserver(void);
 
 static httpd_handle_t server = NULL;
+static esp_netif_t *wifi_ap_netif = NULL;
+
 
 static void dns_task(void *pvParamter) {
     start_dns_server();
@@ -39,7 +41,7 @@ void captive_portal_main(void) {
 }
 
 static void wifi_init_softap(void) {
-    esp_netif_create_default_wifi_ap();
+    wifi_ap_netif = esp_netif_create_default_wifi_ap();
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
@@ -154,13 +156,54 @@ void add_login_to_list(login_data_t new_data) {
 void stop_captive_portal(void) {
     ESP_LOGI(TAG, "Stopping Captive Portal...");
 
+    // stop http server
     if (server) {
         httpd_stop(server);
         server = NULL;
         ESP_LOGI(TAG, "HTTP server stopped");
     }
-    ESP_ERROR_CHECK(esp_wifi_stop());
-    ESP_ERROR_CHECK(esp_wifi_deinit());
+
+    // stop dns server and close port
+    stop_dns_server();
+
+    // stop esp wifi mode
+    esp_err_t err = esp_wifi_stop();
+    if (err == ESP_ERR_WIFI_NOT_INIT) {
+        ESP_LOGW(TAG, "Wi-Fi is not initialized, skipping esp_wifi_stop()");
+    } else {
+        ESP_ERROR_CHECK(err);
+    }
+
+    // de-initialize wifi
+    err = esp_wifi_deinit();
+    if (err == ESP_ERR_WIFI_NOT_INIT) {
+        ESP_LOGW(TAG, "Wi-Fi not initialized, skipping esp_wifi_deinit()");
+    } else {
+        ESP_ERROR_CHECK(err);
+    }
+
+    // destroy default AP interface 
+    if (wifi_ap_netif) {
+        esp_netif_destroy_default_wifi(wifi_ap_netif);
+        wifi_ap_netif = NULL;
+    }
+
+    // // deinit netif NOT SUPPORTED BY ESP IDF
+    // err = esp_netif_deinit();
+    // if (err != ESP_OK) {
+    //     ESP_LOGW(TAG, "esp_netif_deinit failed: %s", esp_err_to_name(err));
+    // } else {
+    //     ESP_LOGI(TAG, "esp_netif deinitialized");
+    // }
+
+    // delete default loop on stop
+    err = esp_event_loop_delete_default();
+    if (err == ESP_ERR_INVALID_STATE) {
+        ESP_LOGW(TAG, "Event loop not created or already deleted");
+    } else {
+        ESP_ERROR_CHECK(err);
+        ESP_LOGI(TAG, "Default event loop deleted");
+    }
 
     ESP_LOGI(TAG, "Wi-Fi AP stopped");
 }

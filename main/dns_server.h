@@ -9,3 +9,4 @@
 #include <unistd.h>
 
 void start_dns_server(void);
+void stop_dns_server(void);
