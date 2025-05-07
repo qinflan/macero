@@ -82,27 +82,26 @@ void ble_init(void) {
 	esp_ble_gap_register_callback(ble_gap_event_handler);
 }
 void ble_advertise(void) {
-	static const uint8_t audio_service_uuid[16] = {
-        0x0a, 0x11, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x8e, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00
-    };
+	// mimic an HID device uuid
+	static const uint8_t hid_service_uuid[16] = {
+		0xFB, 0x34, 0x9B, 0x5F,
+		0x80, 0x00, 0x00, 0x80,
+		0x00, 0x10, 0x00, 0x00,
+		0x12, 0x18, 0x00, 0x00  
+	};
 
-    esp_bt_uuid_t service_uuid;
-    service_uuid.len = ESP_UUID_LEN_128;  
-    memcpy(service_uuid.uuid.uuid128, audio_service_uuid, sizeof(audio_service_uuid));
-
-	esp_ble_adv_data_t adv_data = { // ble advertisement data TODO: create enum file to pull random ad data objects
+	esp_ble_adv_data_t adv_data = { // ble advertisement data
 		.set_scan_rsp = false,
 		.include_name = true,
 		.include_txpower = true,
 		.min_interval = BLE_ADV_INT_MIN,
 		.max_interval = BLE_ADV_INT_MAX,
-		.appearance = 0x00,
-		.manufacturer_len = 0,
-		// .p_manufacturer_data = NULL,
+		.appearance = 0x03C0,
+		.p_manufacturer_data = NULL,
 		.service_data_len = 0,
-		// .p_service_data = NULL,
-		.service_uuid_len = sizeof(audio_service_uuid),
-		.p_service_uuid = service_uuid.uuid.uuid128,
+		.p_service_data = NULL,
+		.service_uuid_len = sizeof(hid_service_uuid),
+		.p_service_uuid = (uint8_t *)hid_service_uuid,
 		.flag = ESP_BLE_ADV_FLAG_GEN_DISC | ESP_BLE_ADV_FLAG_BREDR_NOT_SPT
 	};
 

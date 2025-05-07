@@ -9,7 +9,7 @@
 #include "esp_bt_defs.h"
 
 #define BLE_ADV_INT_MIN 0x20
-#define BLE_ADV_INT_MAX 0x40
+#define BLE_ADV_INT_MAX 0x30
 #define BLE_SPAM_DEVICE_NAME "macero"
 
 void ble_init(void);
