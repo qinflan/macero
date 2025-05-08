@@ -28,7 +28,9 @@
         "esp_hidd_prf_api.h": "c",
         "xiosbase": "c",
         "esp_hidd.h": "c",
-        "esp_gatts_api.h": "c"
+        "esp_gatts_api.h": "c",
+        "esp_hidd_gatts.h": "c",
+        "chrono": "c"
     },
     "idf.flashType": "UART"
 }

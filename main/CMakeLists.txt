@@ -17,5 +17,4 @@ idf_component_register(SRCS
                         esp_netif
                         esp_http_server
                         lwip
-                        # esp_hid
                         )
