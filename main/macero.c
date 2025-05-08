@@ -23,6 +23,9 @@
 
 #define DEBOUNCE_TIME 200 / portTICK_PERIOD_MS
 
+// flag for stopping spam
+volatile bool in_ble_attack = false;
+
 // menu tree node - move to header
 typedef struct MenuNode {
 	char* options[10];
@@ -34,7 +37,6 @@ typedef struct MenuNode {
 } MenuNode;
 
 ListNode* harvested_data_head = NULL;
-
 
 MenuNode mainMenu;
 MenuNode wifiSettings;
@@ -140,16 +142,20 @@ void show_ap_harvest(SSD1306_t *dev) {
     }
 }
 
-void start_ble_spam_attack(SSD1306_t *dev) {
-    gpio_set_level(LED_PIN, 1); 
-    ESP_LOGI(tag, "Starting spam attack...");
-
-    while (read_button(BUTTON_PIN2) == 0) {
+void ble_spam_task(void *pvParameters) {
+    while (in_ble_attack) {
         ble_advertise();
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
     ESP_LOGI(tag, "Stopped spam attack...");
+    vTaskDelete(NULL);
+}
 
+void start_ble_spam_attack(SSD1306_t *dev) {
+    gpio_set_level(LED_PIN, 1); 
+    ESP_LOGI(tag, "Starting spam attack...");
+    in_ble_attack = true;
+    xTaskCreate(ble_spam_task, "Macero BLE Spam", 2048, NULL, 5, NULL);
 }
 
 // ddos
@@ -167,6 +173,7 @@ void start_packet_sniffer(SSD1306_t *dev) {
 void exit_ble_mode(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 0); 
     ESP_LOGI(tag, "Exiting menu...");
+    in_ble_attack = false;
 	esp_err_t ret = esp_ble_gap_stop_advertising();
     if (ret == ESP_OK) {
         ESP_LOGI(tag, "Advertising stopped successfully");
