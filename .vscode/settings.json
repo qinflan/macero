@@ -30,7 +30,9 @@
         "esp_hidd.h": "c",
         "esp_gatts_api.h": "c",
         "esp_hidd_gatts.h": "c",
-        "chrono": "c"
+        "chrono": "c",
+        "esp_system.h": "c",
+        "esp_random.h": "c"
     },
     "idf.flashType": "UART"
 }

@@ -143,7 +143,13 @@ void show_ap_harvest(SSD1306_t *dev) {
 void start_ble_spam_attack(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 1); 
     ESP_LOGI(tag, "Starting spam attack...");
-	ble_advertise();
+
+    while (read_button(BUTTON_PIN2) == 0) {
+        ble_advertise();
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+    ESP_LOGI(tag, "Stopped spam attack...");
+
 }
 
 // ddos
@@ -158,7 +164,6 @@ void start_packet_sniffer(SSD1306_t *dev) {
     ESP_LOGI(tag, "Starting packet sniffer...");
 }
 
-// TODO: cancel active mode if exit is pressed
 void exit_ble_mode(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 0); 
     ESP_LOGI(tag, "Exiting menu...");
