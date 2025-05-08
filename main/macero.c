@@ -91,7 +91,7 @@ void show_ap_harvest(SSD1306_t *dev) {
     bool in_menu = true;
     while (in_menu) {
         if (current == NULL) {
-            ssd1306_display_text(dev, 4, "No Data", 7, false);
+            ssd1306_display_text(dev, 4, "no data", 7, false);
         } else {
             ListNode* ptr = harvested_data_head;
             int i = 0;
@@ -107,14 +107,14 @@ void show_ap_harvest(SSD1306_t *dev) {
             }
         }
 
-        // Show "Exit" if scrolled past last item
+        // show exit option if out of bounds
         if (selected_index >= total_entries) {
-            ssd1306_display_text(dev, 0, "> Exit", 6, true);
+            ssd1306_display_text(dev, 0, " < exit > ", 11, true);
         }
 
         vTaskDelay(DEBOUNCE_TIME);
 
-        // Input handling
+        // input handling
         if (read_button(BUTTON_PIN2)) {  // UP
 			ssd1306_clear_screen(dev, false);
 			ssd1306_contrast(dev, 0xff);
@@ -133,7 +133,6 @@ void show_ap_harvest(SSD1306_t *dev) {
 			ssd1306_clear_screen(dev, false);
 			ssd1306_contrast(dev, 0xff);
             if (selected_index >= total_entries) {
-                // Exit option selected
                 in_menu = false;
                 currentMenu = returnMenu;
                 display_menu(dev, currentMenu, 0);
@@ -158,18 +157,6 @@ void start_ble_spam_attack(SSD1306_t *dev) {
     xTaskCreate(ble_spam_task, "Macero BLE Spam", 2048, NULL, 5, NULL);
 }
 
-// ddos
-void start_ddos_attack(SSD1306_t *dev) {
-    gpio_set_level(LED_PIN, 1); 
-    ESP_LOGI(tag, "Starting DDOS attack...");
-}
-
-// packet sniffer
-void start_packet_sniffer(SSD1306_t *dev) {
-    gpio_set_level(LED_PIN, 1); 
-    ESP_LOGI(tag, "Starting packet sniffer...");
-}
-
 void exit_ble_mode(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 0); 
     ESP_LOGI(tag, "Exiting menu...");
@@ -185,7 +172,7 @@ void exit_ble_mode(SSD1306_t *dev) {
 void exit_ap_mode(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 0); 
     ESP_LOGI(tag, "Exiting menu...");
-	stop_captive_portal(); // add error handle
+	stop_captive_portal();
 }
 
 void exit_menu(SSD1306_t *dev) {
@@ -197,7 +184,7 @@ void init_menus() {
 
     // define nodes first
     mainMenu = (MenuNode){
-        .options = {"WiFi", "BLE"},
+        .options = {"wifi", "bluetooth"},
         .num_options = 2,
         .parent = NULL,
         .actions = {NULL, NULL}
@@ -218,7 +205,7 @@ void init_menus() {
     };
 
     bluetoothSettings = (MenuNode){
-        .options = {"start BLE spam", "script select", "dump", "exit"},
+        .options = {"start BLE spam", "scanner", "bad bluetooth", "exit"},
         .num_options = 4,
         .parent = &mainMenu,
         .actions = {start_ble_spam_attack, NULL, NULL, exit_ble_mode}
