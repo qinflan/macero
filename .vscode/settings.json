@@ -32,7 +32,12 @@
         "esp_hidd_gatts.h": "c",
         "chrono": "c",
         "esp_system.h": "c",
-        "esp_random.h": "c"
+        "esp_random.h": "c",
+        "ble_hidd.h": "c",
+        "esp_gatt_defs.h": "c",
+        "devices.h": "c",
+        "hid_device.h": "c",
+        "btc_manage.h": "c"
     },
     "idf.flashType": "UART"
 }
