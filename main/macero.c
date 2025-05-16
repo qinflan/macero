@@ -17,8 +17,8 @@
 
 // buttons
 #define BUTTON_PIN1 26
-#define BUTTON_PIN2 25
-#define BUTTON_PIN3 27
+#define BUTTON_PIN2 27
+#define BUTTON_PIN3 25
 #define LED_PIN 2 
 
 #define DEBOUNCE_TIME 200 / portTICK_PERIOD_MS
