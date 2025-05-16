@@ -204,7 +204,7 @@ void ble_advertise(void)
 	// set advertisement data
 	esp_ble_adv_data_t adv_data = {
 		.set_scan_rsp = false,
-		.include_name = false,
+		.include_name = true,
 		.include_txpower = false,
 		.appearance = 0x00,
 		.manufacturer_len = payload_len,

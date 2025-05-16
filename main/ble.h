@@ -19,7 +19,7 @@
 
 #define BLE_ADV_INT_MIN 0x20
 #define BLE_ADV_INT_MAX 0x30
-#define BLE_SPAM_DEVICE_NAME "Macero"
+#define BLE_SPAM_DEVICE_NAME "macero"
 
 void ble_init(void);
 void ble_advertise(void);
