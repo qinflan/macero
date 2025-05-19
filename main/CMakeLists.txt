@@ -3,6 +3,7 @@ idf_component_register(SRCS
                         "ble.c"
                         "captive_portal.c"
                         "dns_server.c"
+                        "utils.c"
                     INCLUDE_DIRS 
                         "." 
                         "../components/ssd1306"
