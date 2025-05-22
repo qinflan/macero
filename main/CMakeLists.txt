@@ -2,6 +2,7 @@ idf_component_register(SRCS
                         "macero.c"
                         "ble.c"
                         "captive_portal.c"
+                        "beacon_flood.c"
                         "dns_server.c"
                         "utils.c"
                     INCLUDE_DIRS 

@@ -37,7 +37,10 @@
         "esp_gatt_defs.h": "c",
         "devices.h": "c",
         "hid_device.h": "c",
-        "btc_manage.h": "c"
+        "btc_manage.h": "c",
+        "beacon_flood.h": "c",
+        "esp_mac.h": "c",
+        "esp_timer.h": "c"
     },
     "idf.flashType": "UART"
 }

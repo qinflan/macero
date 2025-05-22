@@ -11,6 +11,7 @@
 // custom headers
 #include "ble.h"
 #include "captive_portal.h"
+#include "beacon_flood.h"
 
 // screen
 #define tag "SSD1306"
@@ -157,6 +158,16 @@ void start_ble_spam_attack(SSD1306_t *dev) {
     xTaskCreate(ble_spam_task, "Macero BLE Spam", 2048, NULL, 5, NULL);
 }
 
+void beacon_flood_task() {
+
+}
+
+void beacon_flood_action(SSD1306_t *dev) {
+    gpio_set_level(LED_PIN, 1); 
+    ESP_LOGI(tag, "Starting beacon flooding...");
+    start_beacon_flood();
+}
+
 void exit_ble_mode(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 0); 
     ESP_LOGI(tag, "Exiting menu...");
@@ -191,10 +202,10 @@ void init_menus() {
     };
 
     wifiSettings = (MenuNode){
-        .options = {"evil portal", "exit"},
-        .num_options = 2,
+        .options = {"evil portal", "flood beacons", "exit"},
+        .num_options = 3,
         .parent = &mainMenu,
-        .actions = {NULL, exit_menu}
+        .actions = {NULL, beacon_flood_action, exit_menu}
     };
 
     evilPortalSettings = (MenuNode){
