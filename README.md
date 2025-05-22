@@ -1,5 +1,4 @@
-# Project Title
-Macero: A ESP32 Pen-testing Project
+# Macero: a ESP32 Ethical Hacking Project
 
 ## Table of Contents
 - [Installation](#installation)
