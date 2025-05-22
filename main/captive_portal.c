@@ -1,5 +1,6 @@
 #include "captive_portal.h"
 #include "esp_log.h"
+#include "utils.h"
 
 static const char *TAG = "CAPTIVE_PORTAL";
 
@@ -106,6 +107,7 @@ static esp_err_t http_post_handler(httpd_req_t *req) {
     add_login_to_list(login_data);
 
     httpd_resp_sendstr(req, "Login successful");
+    blink_led();
     free(buf);
     return ESP_OK;
 }

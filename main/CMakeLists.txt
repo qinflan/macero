@@ -2,7 +2,9 @@ idf_component_register(SRCS
                         "macero.c"
                         "ble.c"
                         "captive_portal.c"
+                        "beacon_flood.c"
                         "dns_server.c"
+                        "utils.c"
                     INCLUDE_DIRS 
                         "." 
                         "../components/ssd1306"
@@ -17,4 +19,5 @@ idf_component_register(SRCS
                         esp_netif
                         esp_http_server
                         lwip
+                        esp_hw_support
                         )

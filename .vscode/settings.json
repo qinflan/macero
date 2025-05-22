@@ -23,7 +23,24 @@
         "esp_wifi.h": "c",
         "sockets.h": "c",
         "dns_server.h": "c",
-        "future": "c"
+        "future": "c",
+        "esp_hidd_api.h": "c",
+        "esp_hidd_prf_api.h": "c",
+        "xiosbase": "c",
+        "esp_hidd.h": "c",
+        "esp_gatts_api.h": "c",
+        "esp_hidd_gatts.h": "c",
+        "chrono": "c",
+        "esp_system.h": "c",
+        "esp_random.h": "c",
+        "ble_hidd.h": "c",
+        "esp_gatt_defs.h": "c",
+        "devices.h": "c",
+        "hid_device.h": "c",
+        "btc_manage.h": "c",
+        "beacon_flood.h": "c",
+        "esp_mac.h": "c",
+        "esp_timer.h": "c"
     },
     "idf.flashType": "UART"
 }

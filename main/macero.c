@@ -11,6 +11,7 @@
 // custom headers
 #include "ble.h"
 #include "captive_portal.h"
+#include "beacon_flood.h"
 
 // screen
 #define tag "SSD1306"
@@ -23,6 +24,9 @@
 
 #define DEBOUNCE_TIME 200 / portTICK_PERIOD_MS
 
+// flag for stopping spam
+volatile bool in_ble_attack = false;
+
 // menu tree node - move to header
 typedef struct MenuNode {
 	char* options[10];
@@ -34,7 +38,6 @@ typedef struct MenuNode {
 } MenuNode;
 
 ListNode* harvested_data_head = NULL;
-
 
 MenuNode mainMenu;
 MenuNode wifiSettings;
@@ -89,7 +92,7 @@ void show_ap_harvest(SSD1306_t *dev) {
     bool in_menu = true;
     while (in_menu) {
         if (current == NULL) {
-            ssd1306_display_text(dev, 4, "No Data", 7, false);
+            ssd1306_display_text(dev, 4, "no data", 7, false);
         } else {
             ListNode* ptr = harvested_data_head;
             int i = 0;
@@ -105,14 +108,14 @@ void show_ap_harvest(SSD1306_t *dev) {
             }
         }
 
-        // Show "Exit" if scrolled past last item
+        // show exit option if out of bounds
         if (selected_index >= total_entries) {
-            ssd1306_display_text(dev, 0, "> Exit", 6, true);
+            ssd1306_display_text(dev, 0, " < exit > ", 11, true);
         }
 
         vTaskDelay(DEBOUNCE_TIME);
 
-        // Input handling
+        // input handling
         if (read_button(BUTTON_PIN2)) {  // UP
 			ssd1306_clear_screen(dev, false);
 			ssd1306_contrast(dev, 0xff);
@@ -131,7 +134,6 @@ void show_ap_harvest(SSD1306_t *dev) {
 			ssd1306_clear_screen(dev, false);
 			ssd1306_contrast(dev, 0xff);
             if (selected_index >= total_entries) {
-                // Exit option selected
                 in_menu = false;
                 currentMenu = returnMenu;
                 display_menu(dev, currentMenu, 0);
@@ -140,28 +142,38 @@ void show_ap_harvest(SSD1306_t *dev) {
     }
 }
 
+void ble_spam_task(void *pvParameters) {
+    while (in_ble_attack) {
+        ble_advertise();
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+    ESP_LOGI(tag, "Stopped spam attack...");
+    vTaskDelete(NULL);
+}
+
 void start_ble_spam_attack(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 1); 
     ESP_LOGI(tag, "Starting spam attack...");
-	ble_advertise();
+    in_ble_attack = true;
+    xTaskCreate(ble_spam_task, "Macero BLE Spam", 2048, NULL, 5, NULL);
 }
 
-// ddos
-void start_ddos_attack(SSD1306_t *dev) {
+void beacon_flood_action(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 1); 
-    ESP_LOGI(tag, "Starting DDOS attack...");
+    ESP_LOGI(tag, "Starting beacon flood...");
+    start_beacon_flood();
 }
 
-// packet sniffer
-void start_packet_sniffer(SSD1306_t *dev) {
-    gpio_set_level(LED_PIN, 1); 
-    ESP_LOGI(tag, "Starting packet sniffer...");
+void stop_beacon_action() {
+    gpio_set_level(LED_PIN, 0); 
+    stop_beacon_flood();
+    ESP_LOGI(tag, "Stopped beacon flood");
 }
 
-// TODO: cancel active mode if exit is pressed
 void exit_ble_mode(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 0); 
     ESP_LOGI(tag, "Exiting menu...");
+    in_ble_attack = false;
 	esp_err_t ret = esp_ble_gap_stop_advertising();
     if (ret == ESP_OK) {
         ESP_LOGI(tag, "Advertising stopped successfully");
@@ -173,7 +185,7 @@ void exit_ble_mode(SSD1306_t *dev) {
 void exit_ap_mode(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 0); 
     ESP_LOGI(tag, "Exiting menu...");
-	stop_captive_portal(); // add error handle
+	stop_captive_portal();
 }
 
 void exit_menu(SSD1306_t *dev) {
@@ -185,17 +197,17 @@ void init_menus() {
 
     // define nodes first
     mainMenu = (MenuNode){
-        .options = {"WiFi", "BLE"},
+        .options = {"wifi", "bluetooth"},
         .num_options = 2,
         .parent = NULL,
         .actions = {NULL, NULL}
     };
 
     wifiSettings = (MenuNode){
-        .options = {"evil portal", "exit"},
-        .num_options = 2,
+        .options = {"evil portal", "flood beacons", "stop flood", "exit"},
+        .num_options = 4,
         .parent = &mainMenu,
-        .actions = {NULL, exit_menu}
+        .actions = {NULL, beacon_flood_action, stop_beacon_action, exit_menu}
     };
 
     evilPortalSettings = (MenuNode){
@@ -206,7 +218,7 @@ void init_menus() {
     };
 
     bluetoothSettings = (MenuNode){
-        .options = {"start BLE spam", "script select", "dump", "exit"},
+        .options = {"start BLE spam", "scanner", "bad bluetooth", "exit"},
         .num_options = 4,
         .parent = &mainMenu,
         .actions = {start_ble_spam_attack, NULL, NULL, exit_ble_mode}
