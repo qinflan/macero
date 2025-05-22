@@ -20,5 +20,4 @@ idf_component_register(SRCS
                         esp_http_server
                         lwip
                         esp_hw_support
-                        esp_hid
                         )

@@ -15,3 +15,4 @@
 #include "esp_timer.h"
 
 void start_beacon_flood(void); 
+void stop_beacon_flood(void);

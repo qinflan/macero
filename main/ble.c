@@ -43,54 +43,6 @@ void ble_gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t 
 	}
 }
 
-// void hid_event_handler(void *context, const char *event_name, long event_id, void *event_data)
-// {
-//     // Log the event for debugging
-//     ESP_LOGI("HID_EVENT", "Event received: %s, Event ID: %ld", event_name, event_id);
-
-//     // Event handling based on event_id (you can define your own event IDs)
-//     switch (event_id)
-//     {
-//         case ESP_HIDD_INIT_EVT:
-//             ESP_LOGI("HID_EVENT", "HID device initialized");
-//             // Initialize any resources if needed
-//             break;
-
-//         case ESP_HIDD_DEINIT_EVT:
-//             ESP_LOGI("HID_EVENT", "HID device deinitialized");
-//             // Cleanup resources if needed
-//             break;
-
-//         case ESP_HIDD_OPEN_EVT:
-//             ESP_LOGI("HID_EVENT", "Host connected");
-//             // Start communication or prepare resources for data exchange
-//             break;
-
-//         case ESP_HIDD_CLOSE_EVT:
-//             ESP_LOGI("HID_EVENT", "Host disconnected");
-//             // Cleanup or reset state after disconnection
-//             break;
-
-//         case ESP_HIDD_SEND_REPORT_EVT:
-//             ESP_LOGI("HID_EVENT", "Report sent to host");
-//             // Handle logic after sending a report
-//             break;
-
-//         default:
-//             ESP_LOGI("HID_EVENT", "Unhandled event ID: %ld", event_id);
-//             break;
-//     }
-
-//     // If there's any event-specific data, you can process it here
-//     if (event_data != NULL)
-//     {
-//         // Cast event_data to the appropriate type if needed (depends on the event)
-//         // For example:
-//         // esp_hidd_cb_param_t *param = (esp_hidd_cb_param_t *)event_data;
-//         // Handle specific event data here
-//     }
-// }
-
 void ble_init(void)
 {
 	esp_err_t ret;
@@ -133,31 +85,6 @@ void ble_init(void)
 		ESP_LOGE(tag, "Bluedroid enabling failed: %s", esp_err_to_name(ret));
 		return;
 	}
-
-	// // Prepare HID device parameters
-	// esp_hid_device_config_t hidd_config = {
-    //     .vendor_id = 0x1234,
-    //     .product_id = 0xABCD,
-    //     .version = 0x0100,
-    //     .device_name = BLE_SPAM_DEVICE_NAME,
-    //     .manufacturer_name = "tektra",
-    //     .serial_number = "0001",
-    //     .report_maps = (esp_hid_raw_report_map_t *)hid_report_map, // Corrected: report_maps instead of report_map
-    //     .report_maps_len = sizeof(hid_report_map), // Corrected: report_maps_len instead of report_map_len
-    // };
-
-	// // Initialize HID device
-	// esp_hidd_dev_t *hid_dev = NULL;
-	// ret = esp_hidd_dev_init(
-	// 	&hidd_config,
-	// 	ESP_HID_TRANSPORT_BLE,
-	// 	hid_event_handler,
-	// 	&hid_dev
-	// );
-	// if (ret != ESP_OK) {
-	// 	ESP_LOGE(tag, "Failed to initialize HID device: %s", esp_err_to_name(ret));
-	// 	return;
-	// }
 
 	ret = esp_ble_gap_set_device_name(BLE_SPAM_DEVICE_NAME);
 	if (ret != ESP_OK)

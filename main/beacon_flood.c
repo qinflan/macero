@@ -6,6 +6,8 @@
 #define CHANNEL 6
 #define NUM_SSIDS 100
 
+static TaskHandle_t beacon_flood_handle = NULL;
+
 static const uint8_t beacon_template[] = {
     // 802.11 MAC Header (24 bytes)
     0x80, 0x00,                         // Frame Control (Type: Management, Subtype: Beacon)
@@ -169,8 +171,31 @@ static void beacon_task(void *pvParam) {
 void start_beacon_flood() {
     ESP_LOGI(TAG, "Launching beacon flood task...");
     init_beacon_wifi();
-    BaseType_t result = xTaskCreate(beacon_task, "beacon_flood_task", 4096, NULL, 5, NULL);
+    BaseType_t result = xTaskCreate(beacon_task, "beacon_flood_task", 4096, NULL, 5, &beacon_flood_handle);
     if (result != pdPASS) {
         ESP_LOGE(TAG, "Failed to create beacon flood task");
+    }
+}
+
+void stop_beacon_flood() {
+    if (beacon_flood_handle != NULL) {
+        vTaskDelete(beacon_flood_handle);
+        beacon_flood_handle = NULL;
+        ESP_LOGI(TAG, "Beacon flood task stopped");
+    }
+
+    esp_err_t err = esp_wifi_stop();
+    if (err == ESP_ERR_WIFI_NOT_INIT) {
+        ESP_LOGW(TAG, "Wi-Fi is not initialized, skipping esp_wifi_stop()");
+    } else {
+        ESP_ERROR_CHECK(err);
+    }
+
+    // de-initialize wifi
+    err = esp_wifi_deinit();
+    if (err == ESP_ERR_WIFI_NOT_INIT) {
+        ESP_LOGW(TAG, "Wi-Fi not initialized, skipping esp_wifi_deinit()");
+    } else {
+        ESP_ERROR_CHECK(err);
     }
 }

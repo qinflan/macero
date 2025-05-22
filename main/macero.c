@@ -158,14 +158,16 @@ void start_ble_spam_attack(SSD1306_t *dev) {
     xTaskCreate(ble_spam_task, "Macero BLE Spam", 2048, NULL, 5, NULL);
 }
 
-void beacon_flood_task() {
-
-}
-
 void beacon_flood_action(SSD1306_t *dev) {
     gpio_set_level(LED_PIN, 1); 
-    ESP_LOGI(tag, "Starting beacon flooding...");
+    ESP_LOGI(tag, "Starting beacon flood...");
     start_beacon_flood();
+}
+
+void stop_beacon_action() {
+    gpio_set_level(LED_PIN, 0); 
+    stop_beacon_flood();
+    ESP_LOGI(tag, "Stopped beacon flood");
 }
 
 void exit_ble_mode(SSD1306_t *dev) {
@@ -202,10 +204,10 @@ void init_menus() {
     };
 
     wifiSettings = (MenuNode){
-        .options = {"evil portal", "flood beacons", "exit"},
-        .num_options = 3,
+        .options = {"evil portal", "flood beacons", "stop flood", "exit"},
+        .num_options = 4,
         .parent = &mainMenu,
-        .actions = {NULL, beacon_flood_action, exit_menu}
+        .actions = {NULL, beacon_flood_action, stop_beacon_action, exit_menu}
     };
 
     evilPortalSettings = (MenuNode){
