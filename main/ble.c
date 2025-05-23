@@ -101,7 +101,6 @@ void ble_init(void)
 
 void ble_advertise(void)
 {
-	// 1. Generate a fake random MAC address (first byte set to 0xF0 | random)
 	esp_bd_addr_t rand_addr;
 	for (int i = 0; i < 6; i++)
 	{
@@ -109,7 +108,6 @@ void ble_advertise(void)
 	}
 	rand_addr[0] |= 0xF0;
 
-	// 2. Randomly choose between DEVICES and SHORT_DEVICES
 	bool use_long = esp_random() % 2 == 0;
 
 	const uint8_t *chosen_payload;
@@ -140,8 +138,7 @@ void ble_advertise(void)
 		.p_service_data = NULL,
 		.service_uuid_len = 0,
 		.p_service_uuid = NULL,
-		.flag = ESP_BLE_ADV_FLAG_GEN_DISC | ESP_BLE_ADV_FLAG_BREDR_NOT_SPT
-	};
+		.flag = ESP_BLE_ADV_FLAG_GEN_DISC | ESP_BLE_ADV_FLAG_BREDR_NOT_SPT};
 
 	// stop advertising if present
 	esp_ble_gap_stop_advertising();
