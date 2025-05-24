@@ -1,4 +1,4 @@
-# Macero: a ESP32 Ethical Hacking Project
+# Macero
 This is actually a project for my Computer Architecture course, however I'm going to keep working on it to improve features and create a legitimate product.
 
 ## Installation
