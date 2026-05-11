@@ -1,7 +1,4 @@
 # Macero
-<<<<<<< Updated upstream
-This is actually a project for my Computer Architecture course, however I'm going to keep working on it to improve features and create a legitimate product.
-=======
 
 **A Powerful ESP32-Based Security Research Platform**
 
@@ -95,7 +92,6 @@ Navigate features through an intuitive menu system displayed on the SSD1306 OLED
 - Battery pack for portable operation (ensure adequate power supply)
 
 ---
->>>>>>> Stashed changes
 
 ## Installation
 
